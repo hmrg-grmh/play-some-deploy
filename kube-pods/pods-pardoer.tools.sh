@@ -16,3 +16,8 @@ pods_perdo () { pods_pardo "$1" "$2" 1 ; } &&
 
 declare -f $(declare -F | awk /pods_*/) ;
 
+# or
+
+declare -F | awk /pods_*/ | xargs echo funcs: >&2 ;
+
+
