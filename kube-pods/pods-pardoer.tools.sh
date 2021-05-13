@@ -15,3 +15,4 @@ pods_alldo () { pods_pardo "$1" "$2" 0 ; } &&
 pods_perdo () { pods_pardo "$1" "$2" 1 ; } &&
 
 declare -f $(declare -F | awk /pods_*/) ;
+
