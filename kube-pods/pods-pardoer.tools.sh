@@ -1,8 +1,8 @@
 
 pods_pardo_x ()
 {
-    podskw="${1:-clustertest}" &&
-    cmd="${2:-/hostname -i/}" &&
+    podskw="${1:-/clustertest/}" &&
+    cmd="${2:-hostname -i}" &&
     parnum="${3:-0}" &&
     kubectl get po |
         awk "$podskw"{print\$1} |
@@ -13,7 +13,7 @@ pods_pardo_x ()
 pods_alldo_x () { pods_pardo_x "$1" "$2" 0 ; } &&
 pods_perdo_x () { pods_pardo_x "$1" "$2" 1 ; } &&
 
-pods_pardo () { pods_pardo_x "$1" /"$2"/ "$3" ; } &&
+pods_pardo () { pods_pardo_x /"$1"/ "$2" "$3" ; } &&
 pods_alldo () { pods_pardo "$1" "$2" 0 ; } &&
 pods_perdo () { pods_pardo "$1" "$2" 1 ; } &&
 
