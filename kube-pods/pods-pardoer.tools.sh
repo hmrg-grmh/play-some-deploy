@@ -1,23 +1,26 @@
 
-pods_pardo ()
+pods_pardo_x ()
 {
     podskw="${1:-clustertest}" &&
-    cmd="${2:-hostname -i}" &&
+    cmd="${2:-/hostname -i/}" &&
     parnum="${3:-0}" &&
     kubectl get po |
-        awk /"$podskw"/{print\$1} |
+        awk "$podskw"{print\$1} |
         xargs -P"$parnum" -i{x} kubectl exec {x} -- bash -c '
           echo ======== '"'"{x}"'"' ======== >&2 ;
         '"$cmd" ;
 } &&
+pods_alldo_x () { pods_pardo_x "$1" "$2" 0 ; } &&
+pods_perdo_x () { pods_pardo_x "$1" "$2" 1 ; } &&
 
+pods_pardo () { pods_pardo_x "$1" /"$2"/ "$3" ; } &&
 pods_alldo () { pods_pardo "$1" "$2" 0 ; } &&
 pods_perdo () { pods_pardo "$1" "$2" 1 ; } &&
 
 
 # end show message
-declare -f $(declare -F | awk /pods_*/) ;
+declare -f $(declare -F | awk /pods_*/\&\&\!/_x/) ;
 # or
-declare -F | awk /pods_*/{print\$0'" ;"'} | xargs echo [MSG]: to see some defined pods-funcs: >&2 ;
+declare -F | awk /pods_*/\&\&\!/_x/{print\$0'" ;"'} | xargs echo [MSG]: to see some defined pods-funcs: >&2 ;
 
 
