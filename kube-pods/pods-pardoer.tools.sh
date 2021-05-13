@@ -11,7 +11,7 @@ pods_pardo ()
         '"$cmd" ;
 } &&
 
-pods_alldo () { pods_paringdo "$1" "$2" 0 ; } &&
-pods_perdo () { pods_paringdo "$1" "$2" 1 ; } &&
+pods_alldo () { pods_pardo "$1" "$2" 0 ; } &&
+pods_perdo () { pods_pardo "$1" "$2" 1 ; } &&
 
 declare -f $(declare -F | awk /pods_*/)
