@@ -24,3 +24,27 @@ kubectl get po |
 
 ##: $()本质是用标准输出拼外层命令的字符串
 ##: 所以只必要有一次执行的部分只会执行一次
+
+kube_allhosts ()
+{
+    kwd="$1" &&
+    kubectl get po |
+        awk '/'"$kwd"'/{print$1}' |
+        xargs -P0 -i{x} kubectl exec {x} -- /bin/bash -c '
+          echo "'"$(
+        
+      kubectl get po |
+          awk '/'"$kwd"'/{print$1}' |
+          xargs -P0 -i{x} kubectl exec {x} -- /bin/bash -c '
+            echo -n "'{x}' " ;
+            hostname -i ;
+          ' |
+          awk 'BEGIN{print}{print$2,$1}' ;
+        
+                    )"'" >> /etc/hosts ;
+        ' ;
+}
+
+### ** 需要做到的功能：在配置生效前打印配置生效的话的样子并询问是否生效。
+
+
