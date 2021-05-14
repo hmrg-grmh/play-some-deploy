@@ -119,7 +119,7 @@ pods_allho_x ()
     {
         timefmt="${1:-%T%::z}"
         get_pods :.metadata.name |
-            xargs -P0 -i{x} kubectl exec {x} -- bash -c '
+            xargs -P0 -i{x} kubectl exec -n "$namespacename" {x} -- /bin/sh -c '
             echo ======== '"$(date +["$timefmt"])"' - '"'"{x}"'"' - "$(date +['"$timefmt"'])" ======== &&
             cat /etc/hosts ;' ;
     } &&
@@ -148,8 +148,8 @@ pods_allho_x ()
     {
         get_pods :.metadata.name |
             
-            xargs -P0 -i{x} kubectl exec {x} -- /bin/bash -c '
-            echo '"'""$( echo  &&  echo "$need_in_hosts" )""'"' >> /etc/hosts ;
+            xargs -P0 -i{x} kubectl exec -n "$namespacename" {x} -- /bin/sh -c '
+            echo '"'""$( echo  && echo "$need_in_hosts" &&  echo )""'"' >> /etc/hosts ;
             ' &&
         
         echo && echo '[:] look, now the hosts:' && echo &&
