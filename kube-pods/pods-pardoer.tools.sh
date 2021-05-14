@@ -16,17 +16,13 @@ pods_pardo_x ()
         '"$cmd" ;
 } &&
 
-pods_def_alldo_x () { pods_pardo_x "$1" "$2" 0 "$3" ; } &&
-pods_def_perdo_x () { pods_pardo_x "$1" "$2" 1 "$3" ; } &&
-podsns_alldo_x () { pods_pardo_x "$1" "$2" "$3" 0 "$4" ; } &&
-podsns_perdo_x () { pods_pardo_x "$1" "$2" "$3" 1 "$4" ; } &&
 
-pods_def_pardo () { pods_pardo_x /"$1"/ "$2" "$3" "$4" ; } &&
-pods_def_alldo () { pods_def_pardo "$1" "$2" 0 "$3" ; } &&
-pods_def_perdo () { pods_def_pardo "$1" "$2" 1 "$3" ; } &&
-podsns_pardo () { pods_pardo_x "$1" /"$2"/ "$3" "$4" "$5" ; } &&
-podsns_alldo () { podsns_pardo "$1" "$2" "$3" 0 "$4" ; } &&
-podsns_perdo () { podsns_pardo "$1" "$2" "$3" 1 "$4" ; } &&
+pods_alldo_x () { pods_pardo_x "$1" "$2" 0 "$3" ; } &&
+pods_perdo_x () { pods_pardo_x "$1" "$2" 1 "$3" ; } &&
+
+pods_pardo () { pods_pardo_x /"$1"/ "$2" "$3" "$4" ; } &&
+pods_alldo () { pods_pardo "$1" "$2" 0 "$3" ; } &&
+pods_perdo () { pods_pardo "$1" "$2" 1 "$3" ; } &&
 
 
 
