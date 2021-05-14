@@ -31,6 +31,6 @@ pods_perdo () { pods_pardo "$1" "$2" 1 "$3" ; } &&
 # end show message
 declare -f $(declare -F | awk /pods_*/\&\&\!/_def_/\&\&\!/ns_/) ;
 # or
-declare -F | awk /pods_*/\&\&\!/_def_/\&\&\!/ns_/{print\$0'" ;"'} | xargs echo [MSG]: to see some defined pods-funcs: >&2 ;
+declare -F | awk /pods/\&\&/par/\&\&\!/_def_/\&\&\!/ns_/{print\$0'" ;"'} | xargs echo [MSG]: to see some defined pods-funcs: >&2 ;
 
 
