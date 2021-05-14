@@ -57,7 +57,7 @@ kube_allhosts ()
 
 pods_allho_x ()
 {
-    podsawkcode="${1:-/hdp-..-test/}" &&
+    podsawkcode="${1:-/pode-[0-9]-test-01/}" &&
     namespacename="${2:-default}" &&
     timefmt="${3:-%T%::z}" &&
     
@@ -107,7 +107,7 @@ pods_allho_x ()
             do
                 case "$choosen" in
                     y|Y) pods_allho_x "${awk_codes:-${3:-$podsawkcode}}" "${ns_name:-${2:-$namespacename}}" ; return $? ;;
-                    n|N) in_loop_iter $((wrong_times+1)) "${ns_name:-${2:-$namespacename}}" "${awk_codes:-${3:-$podsawkcode}}" ; break ;;
+                    n|N) in_loop_iter $((wrong_times+1)) "${ns_name:-${2:-$namespacename}}" "${awk_codes:-${3:-$podsawkcode}}" ; return $? ;;
                     *) ;;
                 esac ;
             done ;
@@ -125,33 +125,61 @@ pods_allho_x ()
     } &&
     need_in_hosts="$(get_pods :.status.podIP,:.metadata.name)" &&
     
-    while true ;
-    do
-        echo    '[!] here is things will be append to /etc/hosts :'    >&2 &&
-        echo     -----------------------------------------------       >&2 &&
-        echo    "$need_in_hosts"      >&2 &&
-        echo     ---------------------------------------------------       >&2 &&
-        echo    '[!] here is /etc/hosts before written on every pods :'    >&2 &&
-        echo    "$(get_hostsfile_parnow "$timefmt")"     >&2 &&
-        echo     --------------------------       >&2 &&
-        echo -n '[?] is these right ? [Y|n]: '    >&2 &&
-        read inputs &&
-        case "$inputs" in
-            Y|y) break ;;
-            n|N) return 31 ;;
-            *) ;;
-        esac ;
-    done &&
+    # while true ;
+    # do
+    #     echo    '[!] here is things will be append to /etc/hosts :'    >&2 &&
+    #     echo     -----------------------------------------------       >&2 &&
+    #     echo    "$need_in_hosts"      >&2 &&
+    #     echo     ---------------------------------------------------       >&2 &&
+    #     echo    '[!] here is /etc/hosts before written on every pods :'    >&2 &&
+    #     echo    "$(get_hostsfile_parnow "$timefmt")"     >&2 &&
+    #     echo     --------------------------       >&2 &&
+    #     echo -n '[?] is these right ? [Y|n]: '    >&2 &&
+    #     read inputs &&
+    #     case "$inputs" in
+    #         Y|y) break ;;
+    #         n|N) return 31 ;;
+    #         *) ;;
+    #     esac ;
+    # done &&
     
     
-    
-    get_pods :.metadata.name |
+    q_set_hosts ()
+    {
+        get_pods :.metadata.name |
+            
+            xargs -P0 -i{x} kubectl exec {x} -- /bin/bash -c '
+            echo '"'""$( echo  &&  echo "$need_in_hosts" )""'"' >> /etc/hosts ;
+            ' &&
         
-        xargs -P0 -i{x} kubectl exec {x} -- /bin/bash -c '
-        echo '"'""$( echo  &&  echo "$need_in_hosts" )""'"' >> /etc/hosts ;
-        ' &&
+        echo && echo '[:] look, now the hosts:' && echo &&
+        get_hostsfile_parnow "$timefmt" ;
+    } &&
     
-    get_hostsfile_parnow "$timefmt" ;
+    
+    quest_loopiter ()
+    {
+        times_to_look="${1:-0}" &&
+        
+        echo          '[!] here is things will be append to /etc/hosts :'        &&
+        echo           -----------------------------------------------           &&
+        echo          "$need_in_hosts"      &&
+        echo           ---------------------------------------------------       &&
+        echo          '[!] here is /etc/hosts before written on every pods :'    &&
+        echo          "$(get_hostsfile_parnow "$timefmt")"      &&
+        echo           ----------------------------        &&
+        while read -p '[?] is these right ? [Y|n|r] 'r:\<"$times_to_look"\>' : '     inputs ;
+        do
+            case "$inputs" in
+                Y|y|[yY]es) q_set_hosts ; return 0 ;;
+                n|N|[nN]o) return 3 ;;
+                r|R|[rR]etry ) quest_loopiter $((times_to_look + 1)) ; return $? ;;
+                *) ;;
+            esac ;
+        done ;
+    } &&
+    quest_loopiter 0 ; return $? ;
+    
     
 } &&
 
@@ -170,6 +198,8 @@ pods_allho ()
 
 ### 顺便把提示也加上了。。。但是这个实现总感觉写法很笨。
 ### 一次性增加的有点多。。。
-### 唯一的不足在于，返回码为啥最后选n会变成0？
+
+### 唯一的不足在于，返回码为啥最后选n会变成0？   <-  找到原因了，一个应该对递归后面用 return $? 的地方用了 break 。而且这是在开头的那个交互那里。
+
 
 
