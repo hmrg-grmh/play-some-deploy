@@ -7,7 +7,7 @@ pods_pardo_x ()
     kubectl get po |
         awk "$podskw"{print\$1} |
         xargs -P"$parnum" -i{x} kubectl exec {x} -- bash -c '
-          echo ======== '"'"{x}"'"' ======== >&2 ;
+          echo ======== '"$(date +[%T%::z])"' - '"'"{x}"'"' - "$(date +[%T%::z])" ======== >&2 ;
         '"$cmd" ;
 } &&
 pods_alldo_x () { pods_pardo_x "$1" "$2" 0 ; } &&
