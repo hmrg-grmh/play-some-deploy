@@ -232,7 +232,7 @@ kubectl get po -o custom-columns=:.status.podIP,:.metadata.name --namespace xx |
 # 而副作用，真要脱离函数传参来用，可真不好用。因为你不能确定你用的变量到底是个啥，就好像一张可以天上任意飞的草稿纸，谁都可以改它的内容。每次用的时候，大概都是只有鬼知道它是啥样。
 
 
-pods_nodes_hosts_x ()
+pods_all_hosts_x ()
 {
     podsawkcode="${1:-/pode-[0-9]-test-01/}" &&
     namespacename="${2:-default}" &&
@@ -259,7 +259,7 @@ pods_nodes_hosts_x ()
             while read -p '[?] is these your pods in one cluster ? [Y|n]: ' choosen ;
             do
                 case "$choosen" in
-                    y|Y) pods_nodes_hosts_x "${awk_codes:-${3:-$podsawkcode}}" "${ns_name:-${2:-$namespacename}}" ; return $? ;;
+                    y|Y) pods_all_hosts_x "${awk_codes:-${3:-$podsawkcode}}" "${ns_name:-${2:-$namespacename}}" ; return $? ;;
                     n|N) in_loop_iter $((wrong_times+1)) "${ns_name:-${2:-$namespacename}}" "${awk_codes:-${3:-$podsawkcode}}" ; return $? ;;
                     *) ;;
                 esac ;
@@ -287,7 +287,7 @@ pods_nodes_hosts_x ()
             echo '"'""$( echo  && echo "$need_in_hosts" &&  echo )""'"' >> /etc/hosts ;
             ' &&
         
-        echo && echo '[:] look, now the hosts:' && echo &&
+        echo '[:] look, now the hosts:' &&
         get_hostsfile_parnow "$timefmt" ;
     } &&
     
@@ -316,4 +316,4 @@ pods_nodes_hosts_x ()
     quest_loopiter 0 ; return $? ;
     
     
-} && pods_nodes_hosts () { pods_nodes_hosts_x ; } ;
+} && pods_all_hosts () { pods_all_hosts_x ; } ;
