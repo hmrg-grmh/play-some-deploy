@@ -201,5 +201,113 @@ pods_allho ()
 
 ### 唯一的不足在于，返回码为啥最后选n会变成0？   <-  找到原因了，一个应该对递归后面用 return $? 的地方用了 break 。而且这是在开头的那个交互那里。
 
+# ---------------------- 总结 ---------------------- #
 
 
+# 上面说严谨一点点了的部分:
+
+get_pods ()
+{
+    cus_col_val="${1:-NAME:.metadata.name,PodIP:.status.podIP,NodesIP:.status.hostIP,NAMESPACE:.metadata.namespace}" &&
+    kubectl get po -o custom-columns="$cus_col_val" --namespace "${2:-$namespacename}" |
+        awk "${3:-$podsawkcode}" ;
+} &&
+get_pods :.status.podIP,:.metadata.name default /.../
+
+# 即:
+kubectl get po -o custom-columns=:.status.podIP,:.metadata.name --namespace xx | awk /.../
+
+
+
+# 下面增加了引导功能。不带参数进入。
+
+
+# 提示符： by while read -p '...>' choosen then case choosen to every cmd (maybe rec) , with *) ;; esac ;
+# 定义提示符的地方也就是程序结束的地方了。因为要么进行另一个调用（根据逻辑决定调用谁）（ bash 没有尾调用优化所以写上 ; return $? 吧）要么没输入就啥也不做。
+# 只有在提示符上用 while 而且一定是 while read ， while true 任何地方都不用，用递归代替，不然变量会乱得一塌糊涂、而要实现目标还得进入 if 地狱。
+
+pods_nodes_hosts_x ()
+{
+    podsawkcode="${1:-/pode-[0-9]-test-01/}" &&
+    namespacename="${2:-default}" &&
+    timefmt="${3:-%T%::z}" &&
+    
+    get_pods ()
+    {
+        cus_col_val="${1:-NAME:.metadata.name,PodIP:.status.podIP,NodesIP:.status.hostIP,NAMESPACE:.metadata.namespace}" &&
+        kubectl get po -o custom-columns="$cus_col_val" --namespace "${2:-$namespacename}" |
+            awk "${3:-$podsawkcode}" ;
+    } &&
+    
+    (( $# != 0 )) ||
+    {
+        in_loop_iter ()
+        {
+            wrong_times=${1:-0} &&
+            
+            read -p   \<"$wrong_times"\>\ which\ namespace\ ?\ now\ will\ be:\ "${ns_name:-${2:-$namespacename}}"\ \(just\ \<Enter\>\ to\ use\ this\ or\ input\ new\ one\):\  ns_name &&
+            read -p   \<"$wrong_times"\>\ which\ pods\ regex\ ?\ now\ will\ be:\ "${awk_codes:-${3:-$podsawkcode}}"\ \(just\ \<Enter\>\ to\ use\ this\ or\ input\ new\ one\):\  awk_codes &&
+            
+            echo '[!] here is pods you just select: ' &&
+            get_pods '' "${ns_name:-${2:-$namespacename}}" "${awk_codes:-${3:-$podsawkcode}}" &&
+            while read -p '[?] is these your pods in one cluster ? [Y|n]: ' choosen ;
+            do
+                case "$choosen" in
+                    y|Y) pods_nodes_hosts_x "${awk_codes:-${3:-$podsawkcode}}" "${ns_name:-${2:-$namespacename}}" ; return $? ;;
+                    n|N) in_loop_iter $((wrong_times+1)) "${ns_name:-${2:-$namespacename}}" "${awk_codes:-${3:-$podsawkcode}}" ; return $? ;;
+                    *) ;;
+                esac ;
+            done ;
+        } &&
+        in_loop_iter 0 ; return $? ;
+    } ;
+    
+    get_hostsfile_parnow ()
+    {
+        timefmt="${1:-%T%::z}"
+        get_pods :.metadata.name |
+            xargs -P0 -i{x} kubectl exec -n "$namespacename" {x} -- /bin/sh -c '
+            echo ======== '"$(date +["$timefmt"])"' - '"'"{x}"'"' - "$(date +['"$timefmt"'])" ======== &&
+            cat /etc/hosts ;' ;
+    } &&
+    need_in_hosts="$(get_pods :.status.podIP,:.metadata.name)" &&
+    
+    
+    q_set_hosts ()
+    {
+        get_pods :.metadata.name |
+            
+            xargs -P0 -i{x} kubectl exec -n "$namespacename" {x} -- /bin/sh -c '
+            echo '"'""$( echo  && echo "$need_in_hosts" &&  echo )""'"' >> /etc/hosts ;
+            ' &&
+        
+        echo && echo '[:] look, now the hosts:' && echo &&
+        get_hostsfile_parnow "$timefmt" ;
+    } &&
+    
+    
+    quest_loopiter ()
+    {
+        times_to_look="${1:-0}" &&
+        
+        echo          '[!] here is things will be append to /etc/hosts :'        &&
+        echo           -----------------------------------------------           &&
+        echo          "$need_in_hosts"      &&
+        echo           ---------------------------------------------------       &&
+        echo          '[!] here is /etc/hosts before written on every pods :'    &&
+        echo          "$(get_hostsfile_parnow "$timefmt")"      &&
+        echo           ----------------------------        &&
+        while read -p '[?] is these right ? [Y|n|r] 'r:\<"$times_to_look"\>' : '     inputs ;
+        do
+            case "$inputs" in
+                Y|y|[yY]es) q_set_hosts ; return 0 ;;
+                n|N|[nN]o) return 3 ;;
+                r|R|[rR]etry ) quest_loopiter $((times_to_look + 1)) ; return $? ;;
+                *) ;;
+            esac ;
+        done ;
+    } &&
+    quest_loopiter 0 ; return $? ;
+    
+    
+} && pods_nodes_hosts () { pods_nodes_hosts_x ; } ;
