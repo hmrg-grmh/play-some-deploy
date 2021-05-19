@@ -66,7 +66,7 @@ pods_all_do_x ()
         tfmt=""${5:-$timefmt}""
         
         echo '[!] now, you can run some simple cmds (!q to quit): ' &&
-        while read -p '[:]? ('"${namespace_opt#* }"'):<'"$podsawkcode"'> - ['"$sh_parser"','"$par_lev"']:('"$(date +%T%:::z)"')-:> ' cmd ;
+        while read -p '[:]? ('"${namespace_opt#* }"'):<'"$podsawkcode"'> - ['"$sh_parser"','"$par_lev"']:('"$(date +"$tfmt")"')-:> ' cmd ;
         do
             case "$cmd" in
                 ''|'# '*) ;;
