@@ -70,12 +70,12 @@ pods_all_do_x ()
             par_lev="${4:-$parnum}" &&
             tfmt=""${5:-$timefmt}""
             
-            echo '[!] now, you can run some simple cmds (!q to quit): ' &&
+            echo '[!] now, you can run some simple cmds for pods (!q to quit): ' &&
             while read -p '[:]? ('"${namespace_opt#* }"'):<'"$podsawkcode"'> - ['"$sh_parser"','"$par_lev"']:('"$(date +"$tfmt")"')-:> ' cmd ;
             do
                 case "$cmd" in
                     ''|'# '*) ;;
-                    '!'[qQ]) break ;;
+                    '!'[qQ]) echo 'Bye!' ':)' ; break ;;
                     '!'[cC]) return $chg_code ;;
                     '!'[hH]) echo '[@] !q to quit , !c to change opts , and !h get help .' ;;
                     ['#''!']*) echo "$cmd" ;;
@@ -101,12 +101,12 @@ pods_all_do_x ()
             echo 'parser you just chose: '\["${sh_parser:-${4:-$shparser}}"\] &&
             echo 'parallel-level you just chose: '\["${par_level:-${5:-$parnum}}"\] &&
             echo 'example time-show-format you just chose: '\["$(date +"${time_fmt:-${6:-$timefmt}}")"\] &&
-            while read -p '[?] is these choosen your wants ? [Y|n]: ' YNchoosen ;
+            while read -p '[?] needs to change your choosen ? [N|y]: ' chg_choosen ;
             do
-                case "$YNchoosen" in
-                    y|Y) 
-                        pods_all_do_cmder "${awk_codes:-${3:-$podsawkcode}}" "${ns_opt:-${2:-$namespace_opt}}" "${sh_parser:-${4:-$shparser}}" "${par_level:-${5:-$parnum}}" "${time_fmt:-${6:-$timefmt}}" ; case $? in "$chg_code") ;; *) return $? ;; esac ;;
+                case "$chg_choosen" in
                     n|N) 
+                        pods_all_do_cmder "${awk_codes:-${3:-$podsawkcode}}" "${ns_opt:-${2:-$namespace_opt}}" "${sh_parser:-${4:-$shparser}}" "${par_level:-${5:-$parnum}}" "${time_fmt:-${6:-$timefmt}}" ; case $? in "$chg_code") ;; *) return $? ;; esac ;;
+                    y|Y) 
                         looping_quest_iter $((looped_tims+1)) "${ns_opt:-${2:-$namespace_opt}}" "${awk_codes:-${3:-$podsawkcode}}" "${sh_parser:-${4:-$shparser}}" "${par_level:-${5:-$parnum}}" "${time_fmt:-${6:-$timefmt}}" ; return $? ;;
                     *) ;;
                 esac ;
