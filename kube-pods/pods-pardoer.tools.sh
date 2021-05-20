@@ -58,31 +58,32 @@ pods_all_do_x ()
             awk "${3:-$podsawkcode}" ;
     } &&
     
-    chg_code="${PODS_ALL_DO_CHG_RTCODE:-209}" &&
-    pods_all_do_cmder ()
-    {
-        podsawkcode="${1:-$podsawkcode}" &&
-        namespace_opt="${2:-$namespace_opt}" &&
-        sh_parser="${3:-$shparser}" &&
-        par_lev="${4:-$parnum}" &&
-        tfmt=""${5:-$timefmt}""
-        
-        echo '[!] now, you can run some simple cmds (!q to quit): ' &&
-        while read -p '[:]? ('"${namespace_opt#* }"'):<'"$podsawkcode"'> - ['"$sh_parser"','"$par_lev"']:('"$(date +"$tfmt")"')-:> ' cmd ;
-        do
-            case "$cmd" in
-                ''|'# '*) ;;
-                '!'[qQ]) break ;;
-                '!'[cC]) return $chg_code ;;
-                '!'[hH]) echo '[@] !q to quit , !c to change opts , and !h get help .' ;;
-                ['#''!']*) echo "$cmd" ;;
-                *) pods_all_do_x "$podsawkcode" "$cmd" "$par_lev" "$tfmt" "$namespace_opt" "$sh_parser" ;;
-            esac ;
-        done ;
-    } &&
-    
     (( $# != 0 )) ||
     {
+        chg_code="${PODS_ALL_DO_CHG_RTCODE:-209}" &&
+        
+        pods_all_do_cmder ()
+        {
+            podsawkcode="${1:-$podsawkcode}" &&
+            namespace_opt="${2:-$namespace_opt}" &&
+            sh_parser="${3:-$shparser}" &&
+            par_lev="${4:-$parnum}" &&
+            tfmt=""${5:-$timefmt}""
+            
+            echo '[!] now, you can run some simple cmds (!q to quit): ' &&
+            while read -p '[:]? ('"${namespace_opt#* }"'):<'"$podsawkcode"'> - ['"$sh_parser"','"$par_lev"']:('"$(date +"$tfmt")"')-:> ' cmd ;
+            do
+                case "$cmd" in
+                    ''|'# '*) ;;
+                    '!'[qQ]) break ;;
+                    '!'[cC]) return $chg_code ;;
+                    '!'[hH]) echo '[@] !q to quit , !c to change opts , and !h get help .' ;;
+                    ['#''!']*) echo "$cmd" ;;
+                    *) pods_all_do_x "$podsawkcode" "$cmd" "$par_lev" "$tfmt" "$namespace_opt" "$sh_parser" ;;
+                esac ;
+            done ;
+        } &&
+        
         looping_quest_iter ()
         {
             looped_tims=${1:-0} &&
@@ -121,6 +122,9 @@ pods_all_do_x ()
         echo ======== '"$(date +["$timefmt"])"' - '"'"{x}"'"' - "$(date +['"$timefmt"'])" ======== >&2 ;
         '"$cmd" ;
 } &&
-pods_all_do () { pods_all_do_x ; } ;
+export -f pods_all_do_x &&
+pods_all_do () { sh -c pods_all_do_x ; } ;
 
 ### 这个才算完成版。可以在一个好像是终端的地方不停执行对特定 pod 们的命令了。
+### 另外，只有在无参时才会用到的函数，都放在无参分支里定义。
+### 再就是增加了指定解释器，其实这是顺便的，我的目的只是开个子进程而已。
