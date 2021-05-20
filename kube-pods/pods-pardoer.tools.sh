@@ -44,7 +44,7 @@ declare -F | awk /pods/\&\&/par/\&\&\!/_def_/\&\&\!/ns_/{print\$0'" ;"'} | xargs
 
 pods_all_do_x ()
 {
-    podsawkcode="${1:-/clustertest/}" &&
+    podsawkcode="${1:-/some-poname-rgx/}" &&
     cmd="${2:-hostname -i}" &&
     parnum="${3:-0}" &&
     timefmt="${4:-%T%::z}" &&
