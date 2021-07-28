@@ -81,7 +81,7 @@ pods_clusterz_x ()
         ns="${2:-$namespacename}"
         pswd_def="${3:-zz/Z}" &&
         
-        read -p '[-] set the passwd or black to use ['"$pswd_def"']: ' pswd_ans &&
+        read -p '[-] set the passwd or black to use ['"$pswd_def"']:> ' pswd_ans &&
         pswd="${pswd_ans:-$pswd_def}" &&
         
         expect_unpswd ()
@@ -134,7 +134,7 @@ pods_clusterz_x ()
         while read -p '[?] make a upasswd inner cluster ? [Y|n]: ' answer
         do
             case "$answer" in
-                Y|y|[yY]es) q_unpswd ; return $? ;;
+                Y|y|[yY]es) q_unpswd && { echo '[:] unpass done.' ; break ; } || { return $? ; } ;;
                 n|N|[nN]o) break ;;
                 *) ;;
             esac ;
@@ -164,6 +164,26 @@ addin_meta_mysql ()
 
 ## usg:
 addin_meta_mysql  hive am oozie hue spark hbase 
-
-
+## or:
+add_meta_beta ()
+{
+    echo '[:] add meta:'
+    
+    addin_meta_mysql ()
+    {
+        out_sql_md () 
+        {
+            echo 'create database if not exists `{}` ;' &&
+            echo 'grant all on `{}`.* to "{}"@"%" identified by "{}-pass&" ;' &&
+            echo 'show grants for "{}"@"%" ;' ;
+        } &&
+        
+        (echo "$@" | xargs -n1) |
+            xargs -i -P0 -- /usr/bin/sh -c "$(declare -f out_sql_md)"' && out_sql_md | mysql -uroot -p123456' ;
+    } &&
+    
+    (kubectl get po -o custom-columns=:.metadata.name --namespace "$namespacename" | awk "$podsawkcode") |
+        xargs -i{po} -P0 -- kubectl exec '{po}' --namespace "$namespacename" -- bash -c "$(declare -f addin_meta_mysql)"' && addin_meta_mysql  hive am oozie hue spark hbase' ;
+} &&
+add_meta_beta
 
